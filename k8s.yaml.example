@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8slogchecker
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8slogchecker
+  namespace: default
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - pods/log
+    - replicationcontrollers
+    - replicationcontrollers/scale
+    verbs:
+      - get
+      - list
+  - apiGroups:
+    - apps
+    resources:
+    - deployments
+    - deployments/scale
+    - replicasets
+    - replicasets/scale
+    - statefulsets
+    - statefulsets/scale
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8slogchecker
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: k8slogchecker
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8slogchecker
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: k8slogchecker
+  namespace: default
+  labels:
+    app: k8slogchecker
+spec:
+  schedule: 10 0 * * *
+  jobTemplate:
+    metadata:
+      labels:
+        app: k8slogchecker
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: k8slogchecker
+          containers:
+            - name: k8slogchecker
+              image: lqbing/k8slogchecker
+              envFrom:
+                - secretRef:
+                    name: k8slogchecker
+          restartPolicy: Never
+---
+kind: Secret
+apiVersion: v1
+type: Opaque
+metadata:
+  name: k8slogchecker
+  namespace: default
+data:
+  KLC_RESOURCE_TYPE: c3RhdGZ1bHNldA==
+  KLC_NAMESPACE: ZGVmYXVsdA==
+  KLC_RESOURCE_NAME: Zmx1ZW50ZA==
+  KLC_SCAN_LOG_COUNT: MTAw
+  KLC_ERR_CONTENT: RWxhc3RpY3NlYXJjaEVycm9y
+  KLC_IGNORE_CONTENT: ''
+  KLC_SEND_MAIL: dHJ1ZQ==
+  MAIL_ADD_SUBJECT: dGFkYQ==
+  MAIL_FROM: c2VuZEBtYWlsLmNvbQ==
+  MAIL_HOST: c210cC5vZmZpY2UzNjUuY29t
+  MAIL_PASSWORD: cGFzcw==
+  MAIL_TO: cmVjQG1haWwuY29t
