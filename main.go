@@ -205,7 +205,10 @@ func ReadConfigFromEnv() K8sLogCheckerConfig {
 
 func GetEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
-		return value
+		v := strings.TrimSpace(value)
+		v = strings.Trim(v, "\n")
+		v = strings.Trim(v, "\r")
+		return v
 	}
 	return fallback
 }
@@ -222,7 +225,10 @@ func GetIntEnv(key string, fallback int) int {
 
 func GetRequiredEnv(key string) string {
 	if value, ok := os.LookupEnv(key); ok {
-		return value
+		v := strings.TrimSpace(value)
+		v = strings.Trim(v, "\n")
+		v = strings.Trim(v, "\r")
+		return v
 	}
 	panic("env \"" + key + "\" is required")
 }
